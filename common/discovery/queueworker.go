@@ -32,6 +32,7 @@ func NewQueueWorker(key string, endpoints []string, kqConf kq.KqConf) *QueueWork
 	}
 }
 
+// 心跳
 func (q *QueueWorker) HeartBeat() {
 	value, err := json.Marshal(q.kqConf)
 	if err != nil {
@@ -72,7 +73,10 @@ func (q *QueueWorker) register(value string) {
 			case keepResp, ok := <-keepRespChan:
 				if !ok {
 					logx.Infof("租约已经失效:%x", leaseId)
-					q.register(value)
+					// 这里我认为改成 go q.register(value) 比较合适，不然如果一直续约失败，会一直递归调用，直到最后栈溢出
+					//q.register(value)
+					// todo 栈溢出问题定位
+					go q.register(value)
 					return
 				} else { //每秒会续租一次，所以就会受到一次应答
 					logx.Infof("收到自动续租应答:%x", keepResp.ID)
