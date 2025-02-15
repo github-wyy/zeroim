@@ -17,6 +17,7 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
+// 在设计上，ServiceContext 是每一个 logic 和 server 的属性
 type ServiceContext struct {
 	Config    config.Config
 	BizRedis  *redis.Redis

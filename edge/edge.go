@@ -58,7 +58,7 @@ func main() {
 
 	serviceGroup := zeroservice.NewServiceGroup()
 	defer serviceGroup.Stop()
-
+	// 启动kq消费
 	for _, mq := range logic.Consumers(context.Background(), srvCtx, tcpServer.Server, wsServer.Server) {
 		serviceGroup.Add(mq)
 	}

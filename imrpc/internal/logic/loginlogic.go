@@ -31,11 +31,15 @@ func (l *LoginLogic) Login(in *imrpc.LoginRequest) (*imrpc.LoginResponse, error)
 	//	logx.Errorf("[Login] jwt verify token req: %+v error: %v", in, err)
 	//	return nil, err
 	//}
+
+	// 使用 Redis sorted set 存储用户会话信息
+	// key: 用户token   score: 登录时间戳   member: SessionId
 	_, err := l.svcCtx.BizRedis.Zadd(in.Token, time.Now().UnixMilli(), in.SessionId)
 	if err != nil {
 		logx.Errorf("[Login] Zadd token: %s sessionId: %s  error: %v", in.Token, in.SessionId, err)
 		return nil, err
 	}
+	// 设置会话过期时间，单位：秒，默认1小时
 	_ = l.svcCtx.BizRedis.Expire(in.Token, 3600)
 
 	return &imrpc.LoginResponse{}, nil

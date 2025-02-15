@@ -49,7 +49,7 @@ func (srv *TCPServer) sessionLoop(client *client.Client) {
 		return
 	}
 
-	// 稍等看
+	// 定时给客户端发送心跳包，用于保活 长连接
 	go client.HeartBeat()
 
 	for {

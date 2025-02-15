@@ -8,6 +8,7 @@ import (
 // session就是一个字符串，格式为：name:token:id
 type Session string
 
+// name(edge_01)、token、id
 func NewSession(name, token string, id uint64) Session {
 	if len(name) == 0 || len(token) == 0 {
 		panic("name or token is empty")
@@ -48,7 +49,7 @@ func (s Session) Id() uint64 {
 	return id
 }
 
-// 将session拆分成name、token、id三个字符串返回
+// 将session拆分成 name(edge_01)、token、id 三个字符串返回
 func (s Session) Info() (string, string, uint64) {
 	arr := strings.Split(string(s), ":")
 	if len(arr) != 3 {

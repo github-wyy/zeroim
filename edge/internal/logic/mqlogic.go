@@ -33,6 +33,7 @@ func NewMqLogic(ctx context.Context, svcCtx *svc.ServiceContext, srv *socket.Ser
 	}
 }
 
+// edge 服务消费 kafka 消息的 逻辑
 func (l *MqLogic) Consume(_, val string) error {
 	var msg imrpc.PostMsg
 	err := proto.Unmarshal([]byte(val), &msg)
@@ -50,6 +51,7 @@ func (l *MqLogic) Consume(_, val string) error {
 				logx.Errorf("[Consume] session not found, msg: %v", msg)
 				continue
 			}
+			// 消费消息，将 kafaka 的消息发送到 客户端
 			err := s.Send(makeMessage(&msg))
 			if err != nil {
 				logx.Errorf("[Consume] session send error, msg: %v, err: %v", msg, err)
@@ -81,6 +83,7 @@ func (l *MqLogic) Consume(_, val string) error {
 
 func Consumers(ctx context.Context, svcCtx *svc.ServiceContext, srv *socket.Server, wsSrv *socketio.Server) []service.Service {
 	return []service.Service{
+		// 第一个参数是 kafaka 的配置，第二个参数是消费消息的逻辑（MqLogic 实现的 Consume 方法就是消费逻辑）
 		kq.MustNewQueue(svcCtx.Config.KqConf, NewMqLogic(ctx, svcCtx, srv, wsSrv)),
 	}
 }

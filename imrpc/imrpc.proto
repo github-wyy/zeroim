@@ -5,9 +5,9 @@ option go_package="./imrpc";
 
 
 service Imrpc {
-  rpc Login(LoginRequest) returns (LoginResponse);
-  rpc Logout(LogoutRequest) returns (LogoutResponse);
-  rpc PostMessage(PostMsg) returns (PostReponse);
+  rpc Login(LoginRequest) returns (LoginResponse); // 登录方法
+  rpc Logout(LogoutRequest) returns (LogoutResponse); // 登出方法
+  rpc PostMessage(PostMsg) returns (PostReponse); // 发送消息
 }
 
 message LoginRequest {
@@ -29,7 +29,7 @@ message LogoutResponse {
     bytes body = 1;
 }
 
-message PostMsg {
+message PostMsg { // 发送参数
   uint32 Version = 1;
   uint32 Status = 2;
   uint32 ServiceId = 3;
@@ -42,7 +42,7 @@ message PostMsg {
   string Msg = 10; // 消息内容
 }
 
-message PostReponse {
+message PostReponse { // 返回参数
   uint32 code = 1;
   string desc = 2;
   bytes data = 3;

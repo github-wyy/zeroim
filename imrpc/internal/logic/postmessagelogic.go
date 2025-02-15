@@ -11,6 +11,7 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
+// 消息发送的相关逻辑
 type PostMessageLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
@@ -25,6 +26,7 @@ func NewPostMessageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PostM
 	}
 }
 
+// 核心逻辑就是往 kafaka 中发送消息
 func (l *PostMessageLogic) PostMessage(in *imrpc.PostMsg) (*imrpc.PostReponse, error) {
 	var (
 		allDevice bool
@@ -38,6 +40,8 @@ func (l *PostMessageLogic) PostMessage(in *imrpc.PostMsg) (*imrpc.PostReponse, e
 	} else {
 		name, token, id = session.FromString(in.SessionId).Info()
 	}
+
+	// 从 redis 中根据 token 获取 sessionId
 	sessionIds, err := l.svcCtx.BizRedis.Zrange(token, 0, -1)
 	if err != nil {
 		return nil, err
@@ -54,15 +58,18 @@ func (l *PostMessageLogic) PostMessage(in *imrpc.PostMsg) (*imrpc.PostReponse, e
 	}
 	set := collection.NewSet()
 	for _, sessionId := range sessionIds {
+		// 获取到 edge_xx，
 		respName, _, respId := session.FromString(sessionId).Info()
 		if allDevice {
 			set.Add(respName)
 		} else {
 			if name == respName && id == respId {
+				// 通过 edge_xx 获取到对应的 kafka pusher
 				edgeQueue, ok := l.svcCtx.QueueList.Load(respName)
 				if !ok {
 					logx.Severe("invalid session")
 				} else {
+					// 将消息推送到对应的 kafka 队列中,
 					err = edgeQueue.Push(string(data))
 					if err != nil {
 						logx.Errorf("[PostMessage] push data: %s error: %v", string(data), err)
