@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// session就是一个字符串，格式为：name:token:id
 type Session string
 
 func NewSession(name, token string, id uint64) Session {
@@ -47,6 +48,7 @@ func (s Session) Id() uint64 {
 	return id
 }
 
+// 将session拆分成name、token、id三个字符串返回
 func (s Session) Info() (string, string, uint64) {
 	arr := strings.Split(string(s), ":")
 	if len(arr) != 3 {

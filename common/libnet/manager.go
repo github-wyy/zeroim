@@ -11,7 +11,7 @@ const sessionMapNum = 32
 
 type Manager struct {
 	Name        string
-	sessionMaps [sessionMapNum]sessionMap
+	sessionMaps [sessionMapNum]sessionMap // 数组大小为32，每个元素都是一个sessionMap // 分片管理session，减少锁竞争
 	disposeFlag bool
 	disposeOnce sync.Once
 	disposeWait sync.WaitGroup
@@ -19,8 +19,8 @@ type Manager struct {
 
 type sessionMap struct {
 	sync.RWMutex
-	sessions      map[session.Session]*Session
-	tokenSessions map[string][]session.Session
+	sessions      map[session.Session]*Session // sessionStr -> session
+	tokenSessions map[string][]session.Session // token -> sessionStr...
 }
 
 func NewManager(name string) *Manager {

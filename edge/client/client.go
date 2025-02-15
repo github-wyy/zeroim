@@ -73,6 +73,7 @@ func (c *Client) Close() error {
 	return c.Session.Close()
 }
 
+// 将收到的消息转发给IMRPC服务处理
 func (c *Client) HandlePackage(msg *libnet.Message) error {
 	// 消息转发
 	req := makePostMessage(c.Session.Session().String(), msg)

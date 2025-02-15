@@ -36,6 +36,7 @@ func main() {
 	wsServer := server.NewWSServer(srvCtx)
 	protobuf := libnet.NewIMProtocol()
 
+	// 每个server 都需要一个独立的协程去处理请求，内置一个 socket server，传入 自定义协议、监听地址
 	tcpServer.Server, err = socket.NewServe(c.Name, c.TCPListenOn, protobuf, c.SendChanSize)
 	if err != nil {
 		panic(err)

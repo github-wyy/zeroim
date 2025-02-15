@@ -53,6 +53,7 @@ func (s *Server) Accept() (*libnet.Session, error) {
 			return nil, err
 		}
 
+		// session 的 codec 是 Protocol 的 NewCodec 方法创建的
 		return libnet.NewSession(s.Manager, s.Protocol.NewCodec(conn), s.SendChanSize), nil
 	}
 }

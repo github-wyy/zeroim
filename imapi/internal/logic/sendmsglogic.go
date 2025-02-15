@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"zeroim/imapi/internal/svc"
-	"zeroim/imapi/internal/types"
-	"zeroim/imrpc/imrpc"
+	"github.com/zhoushuguang/zeroim/imapi/internal/svc"
+	"github.com/zhoushuguang/zeroim/imapi/internal/types"
+	"github.com/zhoushuguang/zeroim/imrpc/imrpc"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -26,9 +26,9 @@ func NewSendMsgLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SendMsgLo
 }
 
 func (l *SendMsgLogic) SendMsg(req *types.SendMsgRequest) (*types.SendMsgResponse, error) {
-	_, err := l.svcCtx.IMRpc.PostMessage(l.ctx, &imrpc.PostMessageRequest{
+	_, err := l.svcCtx.IMRpc.PostMessage(l.ctx, &imrpc.PostMsg{
 		Token: fmt.Sprintf("%d", req.ToUserId),
-		Body:  []byte(req.Content),
+		Msg:   req.Content,
 	})
 	if err != nil {
 		return nil, err

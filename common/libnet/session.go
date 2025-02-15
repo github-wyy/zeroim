@@ -13,6 +13,7 @@ import (
 )
 
 func init() {
+	// 传入一个随机数种子，以保证每次启动的id都不一样
 	globalSessionId = uint64(rand.New(rand.NewSource(time.Now().Unix())).Uint32())
 }
 

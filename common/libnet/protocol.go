@@ -11,7 +11,7 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-const maxBodySize = 1 << 12
+const maxBodySize = 1 << 12 // 4KB
 
 /*
 总长度
@@ -31,16 +31,28 @@ header头长度=1字节版本号+1字节状态码+2字节消息类型+2字节命
 header头长度=1+1+2+2+4
 */
 
+/*
+connection：
+----|--|-|-|--|--|----|body
+
+message：
+--|-|-|--|--|----|body
+*/
+
 const (
 	packSize      = 4
-	headerSize    = 2
+	headerSize    = 2 // 占用2个字节用来表示header头的长度
 	verSize       = 1
 	statusSize    = 1
 	serviceIdSize = 2
 	cmdSize       = 2
 	seqSize       = 4
+
+	// header内容占用的字节数
 	rawHeaderSize = verSize + statusSize + serviceIdSize + cmdSize + seqSize
-	maxPackSize   = maxBodySize + rawHeaderSize + headerSize + packSize
+	// 最大包长度 = 最大body长度(4KB) + header(10Bytes) + header头长度(2Bytes) + 总长度(4Bytes)
+	maxPackSize = maxBodySize + rawHeaderSize + headerSize + packSize
+
 	// offset
 	headerOffset    = 0
 	verOffset       = headerOffset + headerSize
@@ -52,6 +64,7 @@ const (
 )
 
 var (
+	// codec： 编解码器，负责对消息进行编码和解码，比如pb、json、msgpack等
 	ErrRawPackLen   = errors.New("default server codec pack length error")
 	ErrRawHeaderLen = errors.New("default server codec header length error")
 )
@@ -64,6 +77,7 @@ type Header struct {
 	Seq       uint32
 }
 
+// --|-|-|--|--|----|body
 type Message struct {
 	Header
 	Body []byte
@@ -79,6 +93,7 @@ type Protocol interface {
 }
 
 type Codec interface {
+	// 设置读取数据的超时时间，如果在设定时间内没有读取到数据，将返回超时错误，用于防止网络读取操作无限期阻塞
 	SetReadDeadline(t time.Time) error
 	SetWriteDeadline(t time.Time) error
 	Receive() (*Message, error)
@@ -86,6 +101,7 @@ type Codec interface {
 	Close() error
 }
 
+// 自定义协议
 type IMProtocol struct{}
 
 func NewIMProtocol() Protocol {
@@ -96,6 +112,7 @@ func (p *IMProtocol) NewCodec(conn net.Conn) Codec {
 	return &imCodec{conn: conn}
 }
 
+// 自定义编解码器
 type imCodec struct {
 	conn net.Conn
 }
@@ -104,14 +121,35 @@ func (c *imCodec) readPackSize() (uint32, error) {
 	return c.readUint32BE()
 }
 
+// todo 有无其他更好的方式获取包的长度？
 func (c *imCodec) readUint32BE() (uint32, error) {
 	b := make([]byte, packSize)
-	_, err := io.ReadFull(c.conn, b)
+	_, err := io.ReadFull(c.conn, b) // 消息的前4个字节存储了整个数据包的长度
 	if err != nil {
 		return 0, err
 	}
 	return binary.BigEndian.Uint32(b), nil
 }
+
+/*
+// io.ReadFull 用于精确从 r 中读取 len(buf) 个字节，返回读取的字节数和遇到的错误。如果长度和期望的长度不匹配，则返回 ErrUnexpectedEOF 错误。
+// 所以不用下面这种，下面这种和 io.Read() 一样
+func (c *imCodec) readUint32BE() (uint32, error) {
+	b := make([]byte, packSize)
+	n, err := io.ReadFull(c.conn, b)
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return 0, fmt.Errorf("连接已关闭，未能读取完整数据: %w", err)
+		} else if errors.Is(err, io.ErrUnexpectedEOF) {
+			// 处理读取到的部分数据的情况
+			return binary.BigEndian.Uint32(b[:n]), nil
+		}
+
+		return 0, err
+	}
+	return binary.BigEndian.Uint32(b), nil
+}
+*/
 
 func (c *imCodec) readPacket(msgSize uint32) ([]byte, error) {
 	b := make([]byte, msgSize)
@@ -173,6 +211,9 @@ func (c *imCodec) Send(msg Message) error {
 	binary.BigEndian.PutUint32(buf[seqOffset:], msg.Seq)
 
 	// body
+	// 安全性：copy()可以确保不会发生越界访问。它只会复制目标切片能容纳的数据量，避免了内存溢出的风险
+	// 数据隔离：copy()会创建数据的副本，这样即使原始的msg.Body在其他地方被修改，也不会影响到要发送的数据
+	// 正确的内存布局：这里需要将body数据放到预先分配好的buf切片的特定位置(headerSize+rawHeaderSize之后)，copy()能保证数据被正确放置
 	copy(buf[headerSize+rawHeaderSize:], msg.Body)
 	allBuf := append(packLenBuf, buf...)
 	n, err := c.conn.Write(allBuf)
@@ -185,6 +226,7 @@ func (c *imCodec) Send(msg Message) error {
 	return nil
 }
 
+// 设置读超时
 func (c *imCodec) SetReadDeadline(t time.Time) error {
 	return c.conn.SetReadDeadline(t)
 }

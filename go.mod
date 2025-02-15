@@ -2,8 +2,6 @@ module github.com/zhoushuguang/zeroim
 
 go 1.21
 
-toolchain go1.22.7
-
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang/protobuf v1.5.4
@@ -11,6 +9,7 @@ require (
 	github.com/zeromicro/go-queue v1.2.1
 	github.com/zeromicro/go-zero v1.6.5
 	go.etcd.io/etcd/client/v3 v3.5.14
+	golang.org/x/net v0.25.0
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.1
 )
@@ -55,6 +54,7 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	github.com/redis/go-redis/v9 v9.4.0 // indirect
 	github.com/segmentio/kafka-go v0.4.38 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.14 // indirect
@@ -74,7 +74,6 @@ require (
 	go.uber.org/automaxprocs v1.5.3 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/term v0.20.0 // indirect
