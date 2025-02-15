@@ -24,9 +24,10 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
-	// 第一次初始化
+	// 第一次初始化，获取 etcd 上的所有 kafaka 配置到 QueueList 中
 	queueList := GetQueueList(c.QueueEtcd)
 	threading.GoSafe(func() {
+		// 第二个参数是一个接口 QueueObserver，需要实现 Update 和 Delete 方法
 		discovery.QueueDiscoveryProc(c.QueueEtcd, queueList)
 	})
 	rds, err := redis.NewRedis(redis.RedisConf{
@@ -45,7 +46,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 }
 
 type QueueList struct {
-	kqs map[string]*kq.Pusher
+	kqs map[string]*kq.Pusher // edge_id -> kq.Pusher
 	l   sync.Mutex
 }
 
@@ -89,6 +90,7 @@ func GetQueueList(conf discov.EtcdConf) *QueueList {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
+	// 拿前缀为 edge 的所有 key 和 value
 	res, err := cli.Get(ctx, conf.Key, clientv3.WithPrefix())
 	if err != nil {
 		panic(err)
@@ -102,6 +104,7 @@ func GetQueueList(conf discov.EtcdConf) *QueueList {
 		if len(data.Brokers) == 0 || len(data.Topic) == 0 {
 			continue
 		}
+		// 创建 kafaka 消息的生产者，保存到 ql 中
 		edgeQueue := kq.NewPusher(data.Brokers, data.Topic)
 
 		ql.l.Lock()

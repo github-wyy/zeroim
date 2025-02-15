@@ -11,7 +11,7 @@ import (
 )
 
 type QueueMaster struct {
-	members  map[string]kq.KqConf
+	members  map[string]kq.KqConf // edge_id -> kqConf
 	cli      *clientv3.Client
 	rootPath string
 	observer QueueObserver
@@ -29,7 +29,7 @@ func NewQueueMaster(rootPath string, address []string) (*QueueMaster, error) {
 	return &QueueMaster{
 		members:  make(map[string]kq.KqConf),
 		cli:      cli,
-		rootPath: rootPath,
+		rootPath: rootPath, // rootPath -> edge
 	}, nil
 }
 
