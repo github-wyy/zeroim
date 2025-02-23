@@ -45,6 +45,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	// ws服务：
+	// 1. http.ListenAndServe(ws.Server.Address, nil)
+	// 2. http.Handle(...)，其中 handler 为 websocket包下的 handler
+	// 2.1  劫持原始HTTP连接（Hijack）
+	//		读取客户端握手请求
+	//		验证WebSocket版本和头信息
+	//		检查Origin等安全设置
+	//		发送HTTP 101 Switching Protocols响应
+	//		升级为全双工的WebSocket连接
 	http.Handle("/ws", websocket.Handler(func(conn *websocket.Conn) {
 		conn.PayloadType = websocket.BinaryFrame
 		wsServer.HandleRequest(conn)
